@@ -1,5 +1,5 @@
 import express from "express";
-import type { Express, Request, Response } from "express";
+import type { Express, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import getEnv from "./utils/env";
 import requestIp from "request-ip";
@@ -7,6 +7,7 @@ import { rateLimit } from "express-rate-limit";
 import type { HttpError } from "http-errors";
 import createHttpError from "http-errors";
 import morganMiddleware from "./logger/morgan.logger";
+import authRoute from "./apis/auth/route";
 
 export default function expressApp(): Express {
   const app = express();
@@ -56,25 +57,30 @@ export default function expressApp(): Express {
     });
   });
 
-  app.use((req: Request, res: Response) => {
+  app.use("/api/auth", authRoute);
+
+  app.use((_req: Request, res: Response) => {
     res.status(404).json({
       success: false,
       message: "not found",
     });
   });
 
-  app.use((err: HttpError, _req: Request, res: Response) => {
-    const errData = {
-      status: err.status || err.statusCode || 500,
-      name: err.name,
-      message: err.message || "server error",
-    };
+  app.use(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (err: HttpError, _req: Request, res: Response, _next: NextFunction) => {
+      const errData = {
+        status: err.status || err.statusCode || 500,
+        name: err.name,
+        message: err.message || "server error",
+      };
 
-    res.status(errData.status).json({
-      success: false,
-      message: errData.message,
-    });
-  });
+      res.status(errData.status).json({
+        success: false,
+        message: errData.message,
+      });
+    }
+  );
 
   return app;
 }
