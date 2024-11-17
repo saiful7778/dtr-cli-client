@@ -1,8 +1,14 @@
-import expressApp from "./expressApp";
 import getEnv from "./utils/env";
+import expressApp from "./expressApp";
+import connectDB from "./utils/connectDB";
 
-const server = expressApp();
+(async () => {
+  const server = expressApp();
+  await connectDB();
 
-server.listen(getEnv("port"), () => {
-  console.log(`server is running on port ${getEnv("port")}`);
-});
+  const port = getEnv("port");
+
+  server.listen(port, () => {
+    console.log(`server is running on port:${port}`);
+  });
+})();
